@@ -7,6 +7,7 @@
 #define _GREEN 10
 #define _RED 12
 #define _WHITE 15
+#define _CYAN 11
 
 using namespace std;
 
@@ -20,8 +21,8 @@ int main()
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
     int error;
-    int serverConnectionTimeout = -1;
-    int readValue;
+    //int serverConnectionTimeout = -1;
+    //int readValue;
 
     //Request for WSA 2.2 version
     error=WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -40,12 +41,56 @@ int main()
         return -1;
     }
 
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleTextAttribute(hConsole, _CYAN);
+
+
+
+cout<<endl;
+cout<<"                                   ███           "<<endl;
+cout<<"                                        ██           "<<endl;
+cout<<"                                                    "<<endl;
+cout<<"                 █████           ██ █               "<<endl;
+cout<<"                 ██████        ███████              "<<endl;
+cout<<"                 ██████        ███████              "<<endl;
+cout<<"         ████   █████████     ██ █████         ███  "<<endl;
+cout<<"         ███    █████████    █████████         ████ "<<endl;
+cout<<"                ██  ██████████████ ███              "<<endl;
+cout<<"     █████            █████ ████            ██████  "<<endl;
+cout<<"    ██████████   ██      █████     █     ██████████ "<<endl;
+cout<<"     ███████████  ███████████   ████   ██████████   "<<endl;
+cout<<"      ███████ ███  ██████ █ ███████  ███ █████ █    "<<endl;
+cout<<"        ██████   █ ██████ █████████      ██████     "<<endl;
+cout<<"         ██████  █ ████   █ █   ███ ██  █████       "<<endl;
+cout<<"          ███████ ██     █████    ██ ███████        "<<endl;
+cout<<"         ██ ██  █   ██████ █████   █  ██  █        "<<endl;
+cout<<"          █████████    ██████    ██████████        "<<endl;
+cout<<"         ████    ████         ████   ██ █         "<<endl;
+cout<<"          ████ ██ ███████████████ █ █████         "<<endl;
+cout<<"          ██████ ██████ █   ████ ███████          "<<endl;
+cout<<"           █████  ████ █ ████████  ████           "<<endl;
+cout<<"             ███  ██   ██████████ ███             "<<endl;
+cout<<"               ███  █ █████      ██               "<<endl;
+cout<<"       █          █ ███   █ ██  █  ██    ███      "<<endl;
+cout<<"        ████   █   █████████████   █    ████      "<<endl;
+cout<<"              ██ ███████   ███████ ██             "<<endl;
+cout<<"             ██████ ██    ███ ██████             "<<endl;
+cout<<"              ██████ █     █ ██████              "<<endl;
+cout<<"             ███████       ██ ████              "<<endl;
+cout<<"            █████         ████                "<<endl;
+cout<<"                                            "<<endl;
+cout<<"                                           "<<endl;
+
+cout<<"|_______________/SERAPHIM_NODE_V1.4\\_______________|"<<endl;
+cout<<endl<<endl;
 
     SetConsoleTextAttribute(hConsole, _WHITE);
-    cout<<"1.Initiate client \n2.Initiate server \n";
+
+    cout<<"1.Initiate client \n2.Initiate server\n3.Test reading of file (payload)\n";
     cin>>option;
 
     switch(option){
+        //Simulate client
         case 1:
         {
             HiveClientNode hiveClientNodeObject;
@@ -88,9 +133,11 @@ int main()
             }
             break;
         }
+        //Simulate server
         case 2:
             {
             HiveServerNode hiveServerNodeObject;
+
             hiveServerNodeObject.CreateServerSocket();
             hiveServerNodeObject.DefineServerIPV4(_SERVER_PORT);
             hiveServerNodeObject.BindServerSocket();
@@ -102,10 +149,21 @@ int main()
 
                 while(1){
                     cout<<"Simulating data processing...\n";
-                hiveServerNodeObject.SendOrder();
+                hiveServerNodeObject.SendOrderTest();
                 }
                 break;
             }
+
+        case 3:{
+
+            HiveServerNode hiveServerNodeObject;
+            hiveServerNodeObject.ChooseFile("To test.txt");
+            if(!hiveServerNodeObject.ReadFile()){
+                SetConsoleTextAttribute(hConsole, _RED);
+                cerr << "Failed to open the file: " << endl;
+            }
+            break;
+        }
     }
 
 
