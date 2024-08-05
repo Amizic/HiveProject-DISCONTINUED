@@ -36,9 +36,11 @@
 		</Compiler>
 		<Unit filename="include/HiveClientNode.h" />
 		<Unit filename="include/HiveServerNode.h" />
+		<Unit filename="include/RSAGenerator.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/HiveClientNode.cpp" />
 		<Unit filename="src/HiveServerNode.cpp" />
+		<Unit filename="src/RSAGenerator.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
