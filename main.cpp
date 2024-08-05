@@ -1,13 +1,15 @@
 #include <iostream>
 #include <stdio.h>
-#include <HiveClientNode.h>
-#include <HiveServerNode.h>
 
 #define _SERVER_PORT 7777
-#define _GREEN 10
-#define _RED 12
-#define _WHITE 15
-#define _CYAN 11
+
+#include <HiveClientNode.h>
+#include <HiveServerNode.h>
+#include <ThreadResolvers.h>
+#include <ColorCodes.h>
+//WINDOWS SPECIFIC:
+#include <thread>
+#include <ASCIIART.h>
 
 using namespace std;
 
@@ -29,14 +31,17 @@ int main()
 
     if (error != 0){
         SetConsoleTextAttribute(hConsole, _RED);
-        cout<<"WSAStartup failed with error: "<<error<<"\n";
+        cerr<<"WSAStartup failed with error: "<<error<<"\n";
         return 1;
     }
+    SetConsoleTextAttribute(hConsole, _GREEN);
+    cout<<"WSA started..."<<endl;
+
 
     if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
         /* Couldnt find usable WinSock DLL */
         SetConsoleTextAttribute(hConsole, _RED);
-        cout<<"Could not find version of Winsock.dll that can be used"<<"\n";
+        cerr<<"Could not find version of Winsock.dll that can be used"<<"\n";
         WSACleanup();
         return -1;
     }
@@ -46,53 +51,18 @@ int main()
 
 
 
-cout<<endl;
-cout<<"                                   ███           "<<endl;
-cout<<"                                        ██           "<<endl;
-cout<<"                                                    "<<endl;
-cout<<"                 █████           ██ █               "<<endl;
-cout<<"                 ██████        ███████              "<<endl;
-cout<<"                 ██████        ███████              "<<endl;
-cout<<"         ████   █████████     ██ █████         ███  "<<endl;
-cout<<"         ███    █████████    █████████         ████ "<<endl;
-cout<<"                ██  ██████████████ ███              "<<endl;
-cout<<"     █████            █████ ████            ██████  "<<endl;
-cout<<"    ██████████   ██      █████     █     ██████████ "<<endl;
-cout<<"     ███████████  ███████████   ████   ██████████   "<<endl;
-cout<<"      ███████ ███  ██████ █ ███████  ███ █████ █    "<<endl;
-cout<<"        ██████   █ ██████ █████████      ██████     "<<endl;
-cout<<"         ██████  █ ████   █ █   ███ ██  █████       "<<endl;
-cout<<"          ███████ ██     █████    ██ ███████        "<<endl;
-cout<<"         ██ ██  █   ██████ █████   █  ██  █        "<<endl;
-cout<<"          █████████    ██████    ██████████        "<<endl;
-cout<<"         ████    ████         ████   ██ █         "<<endl;
-cout<<"          ████ ██ ███████████████ █ █████         "<<endl;
-cout<<"          ██████ ██████ █   ████ ███████          "<<endl;
-cout<<"           █████  ████ █ ████████  ████           "<<endl;
-cout<<"             ███  ██   ██████████ ███             "<<endl;
-cout<<"               ███  █ █████      ██               "<<endl;
-cout<<"       █          █ ███   █ ██  █  ██    ███      "<<endl;
-cout<<"        ████   █   █████████████   █    ████      "<<endl;
-cout<<"              ██ ███████   ███████ ██             "<<endl;
-cout<<"             ██████ ██    ███ ██████             "<<endl;
-cout<<"              ██████ █     █ ██████              "<<endl;
-cout<<"             ███████       ██ ████              "<<endl;
-cout<<"            █████         ████                "<<endl;
-cout<<"                                            "<<endl;
-cout<<"                                           "<<endl;
-
-cout<<"|_______________/SERAPHIM_NODE_V1.4\\_______________|"<<endl;
-cout<<endl<<endl;
 
     SetConsoleTextAttribute(hConsole, _WHITE);
 
-    cout<<"1.Initiate client \n2.Initiate server\n3.Test reading of file (payload)\n";
+    cout<<"1.Initiate client \n2. Test incoming connections from multiple clients\n";
     cin>>option;
 
     switch(option){
         //Simulate client
         case 1:
         {
+            SetConsoleTextAttribute(hConsole, _CYAN);
+            GreetingsAngel();
             HiveClientNode hiveClientNodeObject;
             cout<<"Defining server properties...\n";
             hiveClientNodeObject.DefineServerIPV4(_SERVER_PORT);
@@ -133,36 +103,62 @@ cout<<endl<<endl;
             }
             break;
         }
-        //Simulate server
-        case 2:
-            {
+
+        //simulate server
+        case 2:{
+            SetConsoleTextAttribute(hConsole, _CYAN);
+            GreetingsSeraphim();
+            SetConsoleTextAttribute(hConsole, _GREEN);
             HiveServerNode hiveServerNodeObject;
 
-            hiveServerNodeObject.CreateServerSocket();
+            if(hiveServerNodeObject.CreateServerSocket()<0){
+                cerr<<"Unable to create server socket..."<<endl;
+                terminate();
+            }
+            cout<<"Socket created..."<<endl;
+            hiveServerNodeObject.ClearServerFileDescriptorSet();
+            hiveServerNodeObject.AddServerSocketToFileDescriptor();
+
             hiveServerNodeObject.DefineServerIPV4(_SERVER_PORT);
-            hiveServerNodeObject.BindServerSocket();
-            hiveServerNodeObject.Listen();
-            hiveServerNodeObject.AcceptNewClient();
-
-            cout<<"Client connected!\n";
-
-
-                while(1){
-                    cout<<"Simulating data processing...\n";
-                hiveServerNodeObject.SendOrderTest();
-                }
-                break;
-            }
-
-        case 3:{
-
-            HiveServerNode hiveServerNodeObject;
-            hiveServerNodeObject.ChooseFile("To test.txt");
-            if(!hiveServerNodeObject.ReadFile()){
+            if(hiveServerNodeObject.BindServerSocket()== SOCKET_ERROR){
                 SetConsoleTextAttribute(hConsole, _RED);
-                cerr << "Failed to open the file: " << endl;
+                cerr << "Unable to bind socket... " << WSAGetLastError() << std::endl;
+                terminate();
             }
-            break;
+            cout<<"Socket binded to port "<<_SERVER_PORT<<endl;
+
+            hiveServerNodeObject.ClearClientFileDescriptorSet();
+            hiveServerNodeObject.PrepareClients();
+            cout<<"Prepared file descriptors for incoming clients: "<<_MAX_CONNECTIONS<<endl;
+
+            if(hiveServerNodeObject.Listen()!=0){
+                SetConsoleTextAttribute(hConsole, _RED);
+                cerr << "Unable to listen: "<<WSAGetLastError()<<endl;
+                terminate();
+            }
+            cout<<"Listening for the incoming connections..."<<endl;
+
+
+        //Thread needs to run continuously without interrupting the main function, hence it is detached from the process
+            thread connectionResolverThread([&hiveServerNodeObject, &hConsole](){
+                        ConnectionResolver(hiveServerNodeObject, hConsole);
+                    });
+            connectionResolverThread.detach();
+
+
+        //Now operator can continue the instructions
+        SetConsoleTextAttribute(hConsole, _CYAN);
+        char* message;
+        SetConsoleTextAttribute(hConsole, _WHITE);
+            while(1){
+                //cout<<"Enter the order:"<<endl;
+                //cin>>message;
+                cout<<"Simulating work...\n";
+                sleep(1);
+                hiveServerNodeObject.SendOrdersToAllClients("test");
+
+            }
+
         }
     }
 

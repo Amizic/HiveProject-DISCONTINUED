@@ -10,11 +10,15 @@
 	<unistd.h>
 	<iostream>
 
-1722264580 source:c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\main.cpp
+1722873873 source:c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\main.cpp
 	<iostream>
 	<stdio.h>
 	<HiveClientNode.h>
 	<HiveServerNode.h>
+	<ThreadResolvers.h>
+	<ColorCodes.h>
+	<thread>
+	<ASCIIART.h>
 
 1722263363 source:c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\src\hiveclientnode.cpp
 	"HiveClientNode.h"
@@ -28,11 +32,12 @@
 	<unistd.h>
 	<IHiveClientNode.h>
 
-1722264413 source:c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\src\hiveservernode.cpp
+1722867765 source:c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\src\hiveservernode.cpp
 	"HiveServerNode.h"
 
-1722269575 c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\include\hiveservernode.h
+1722868123 c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\include\hiveservernode.h
 	<winsock2.h>
+	<ws2tcpip.h>
 	<unistd.h>
 	<sys/socket.h>
 	<netinet/in.h>
@@ -48,5 +53,16 @@
 
 1722262986 c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\include\ihiveclientnode.h
 
-1722269575 c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\include\ihiveservernode.h
+1722867201 c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\include\ihiveservernode.h
+
+1722870017 c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\include\threadresolvers.h
+	<iostream>
+	<ColorCodes.h>
+	<windows.h>
+	<winsock2.h>
+
+1722864774 c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\include\colorcodes.h
+
+1722873844 c:\users\xp\desktop\programiranje\projekticpp\hiveremaster\hiveremasterapp\include\asciiart.h
+	<iostream>
 

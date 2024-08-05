@@ -10,21 +10,35 @@ HiveServerNode::~HiveServerNode()
     //dtor
 }
 
-int HiveServerNode::GetServerSocket(){
+    //This function returns the server socket
+SOCKET HiveServerNode::GetServerSocket(){
         return this->serverSocket;
     }
 
+    //This function returns client socket
+SOCKET HiveServerNode::GetClientSocket(int clientIndex){
+        return this->clientSockets[clientIndex];
+    }
+
     //Create socket for client for IPV4 protocol
-int HiveServerNode::CreateServerSocket(){
+SOCKET HiveServerNode::CreateServerSocket(){
         return this->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     };
+
+int HiveServerNode::SetSocketOptions(){
+    if (setsockopt(this->serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&this->timeoutMS, sizeof(this->timeoutMS)) == SOCKET_ERROR) {
+        return -1;
+    }
+
+    return 1;
+}
 
     //Closing of socket
 int HiveServerNode::CloseServerSocket(){
         return close(this->serverSocket);
     }
 
-    //Define server address
+    //Define server address (IPV4 or IPV6, port, ip)
 void HiveServerNode::DefineServerIPV4(int port){
         this->serverAddress.sin_family = AF_INET;
         this->serverAddress.sin_port = htons(port);
@@ -39,21 +53,44 @@ int HiveServerNode::BindServerSocket(){
     }
 
     //Listening on a specific socket (after it is created and binded to)
-void HiveServerNode::Listen(){
-        listen(this->serverSocket, _MAX_CONNECTIONS);
+int HiveServerNode::Listen(){
+        return listen(this->serverSocket, _MAX_CONNECTIONS);
     }
 
+    //Initiates list of client sockets to be 0. Call this function only at the beginning of the program. Required for proper functioning.
 void HiveServerNode::PrepareClients(){
         for(int i=0;i<_MAX_CONNECTIONS;i++){
             this->clientSockets[i]=0;
         }
     }
 
-    //Accept communication from server
-int HiveServerNode::AcceptNewClient(){
-        //return this->clientSocket[currentClientIndex] = accept(this->serverSocket, nullptr, nullptr);
-        return this->newClient = accept(this->serverSocket, (struct sockaddr*)&this->serverAddress, nullptr);
+
+//AcceptNewClient and AddNewClientToList are designed to work together
+//Accepting new client and putting it in array of client file descriptors
+SOCKET HiveServerNode::AcceptNewClient(int clientIndex){
+
+        return this->newClient = accept(this->serverSocket, (struct sockaddr*)&this->clientAddress[clientIndex], nullptr);
+}
+
+
+    //Pass the previously accepted connection from client (file descriptor of socket) to add it to list of active clients (File descriptors)
+void HiveServerNode::AddNewClientToList(int clientIndex){
+        if(this->clientSockets[clientIndex]<=0){
+            this->clientSockets[clientIndex]=this->newClient;
+        }
+}
+
+    //Pass message to this function, and the message will be sent to client
+int HiveServerNode::SendOrder(const char* message){
+        send(newClient, message, strlen(message), 0);
+        return 1;
     }
+
+void HiveServerNode::SendOrdersToAllClients(char* message){
+        for(int i=0;i<_MAX_CONNECTIONS;i++){
+            send(clientSockets[i], message, strlen(message), 0);
+        }
+}
 
 int HiveServerNode::SendOrderTest(){
         const char * message="Order from server!";
@@ -62,14 +99,14 @@ int HiveServerNode::SendOrderTest(){
     }
 
 
+    //Choose file name to be loaded for further reading
 void HiveServerNode::ChooseFile(char* fileName){
         this->fileName = fileName;
     }
 
     /*DATA IO OPERATIONS*/
-    // Function to read file content into a character array
-    bool HiveServerNode::ReadFile() {
-
+    // Function to read file content into a character array (based on the previously chosen file name)
+bool HiveServerNode::ReadFile() {
 
                 std::ifstream file(fileName); // Open the file in ASCII mode (default)
                 if (!file.is_open()) {
@@ -93,4 +130,24 @@ void HiveServerNode::ChooseFile(char* fileName){
                 std::cout<<fileBuffer;
 
             return true;
-        }
+}
+
+/*
+    If development of the code proceeds to add functionality to read data from the clients (such as messages or heartbeat), it is important to have file descriptors to handle non blocking select function
+*/
+
+void HiveServerNode::ClearServerFileDescriptorSet(){
+    FD_ZERO(&this->serverFileDescriptorSet);
+}
+
+void HiveServerNode::ClearClientFileDescriptorSet(){
+    FD_ZERO(&this->clientFileDescriptorSet);
+}
+
+void HiveServerNode::AddServerSocketToFileDescriptor(){
+    FD_SET(this->serverSocket, &this->serverFileDescriptorSet);
+}
+
+void HiveServerNode::AddClientSocketToFileDescriptor(int clientIndex){
+    FD_SET(this->clientSockets[clientIndex], &this->clientFileDescriptorSet);
+}

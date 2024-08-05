@@ -2,10 +2,12 @@
 #define HIVESERVERNODE_H
 
 #define _MAX_CONNECTIONS 30
+#define _ACCEPT_TIMEOUT 100
 
 
 #ifdef _WIN32 // Check if compiling for Windows
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <unistd.h>
 #else // Assuming Unix-like system
 #include <sys/socket.h>
@@ -35,32 +37,50 @@
 class HiveServerNode: public IHiveServerNode
 {
     private:
-        int serverSocket;
+        SOCKET serverSocket;
+        SOCKET newClient;
+        SOCKET clientSockets[_MAX_CONNECTIONS];
         sockaddr_in serverAddress;
-        int newClient;
-        int clientSockets[_MAX_CONNECTIONS];
+        sockaddr_in clientAddress[_MAX_CONNECTIONS];
+        int serverAddressLenght=sizeof(serverAddress);
+
 
         //IO variables
         char* fileName;
         char* fileBuffer;
         int fileSize;
 
+    //option for sockets:
+    DWORD timeoutMS = _ACCEPT_TIMEOUT;
+
 
     public:
+        fd_set serverFileDescriptorSet;
+        fd_set clientFileDescriptorSet;
+
         HiveServerNode();
         virtual ~HiveServerNode();
 
-     int GetServerSocket() override;
-     int CreateServerSocket() override;
+     SOCKET GetServerSocket() override;
+     SOCKET GetClientSocket(int clientIndex) override;
+     SOCKET CreateServerSocket() override;
+     int SetSocketOptions() override;
      int CloseServerSocket() override;
      void DefineServerIPV4(int port) override;
      int BindServerSocket() override;
-     void Listen() override;
+     int Listen() override;
      void PrepareClients() override;
-     int AcceptNewClient() override;
+     SOCKET AcceptNewClient(int clientIndex) override;
+     void AddNewClientToList(int clientIndex) override;
+     int SendOrder(const char*) override;
+     void SendOrdersToAllClients(char* message) override;
      int SendOrderTest() override;
      void ChooseFile(char* fileName)override;
      bool ReadFile()override;
+     void ClearServerFileDescriptorSet();
+     void ClearClientFileDescriptorSet() override;
+     void AddServerSocketToFileDescriptor() override;
+     void AddClientSocketToFileDescriptor(int clientIndex) override;
 
 
 
